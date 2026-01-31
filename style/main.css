@@ -767,7 +767,7 @@ hr {
   color: #776e65;
   padding: 8px 12px;
   border-radius: 3px;
-  font-weight: bold;
+  font-weight: 900;
   z-index: 300;
   box-shadow: 0 2px 0 rgba(0,0,0,0.15);
   -webkit-animation: move-up 1200ms ease-in;
@@ -776,4 +776,102 @@ hr {
   -webkit-animation-fill-mode: both;
   -moz-animation-fill-mode: both;
   animation-fill-mode: both;
+}
+
+.merge-message .rainbow-char {
+  font-size: 24px;
+  line-height: 1;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  -webkit-font-smoothing: antialiased;
+  animation: pop-color 900ms ease-in-out both;
+  display: inline-block;
+}
+
+@keyframes pop-color {
+  0% { transform: translateY(6px) scale(0.85); opacity: 0; }
+  50% { transform: translateY(-6px) scale(1.08); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* 强制问题弹窗样式 */
+.forced-modal {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.forced-dialog {
+  background: linear-gradient(135deg, #111 0%, #222 30%, #2b1b5f 60%, #3b1058 100%);
+  color: #fff;
+  padding: 22px 26px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  transform-origin: center;
+  animation: dialog-pop 420ms cubic-bezier(.2,.9,.3,1);
+}
+.forced-question {
+  font-size: 28px;
+  margin: 0 0 14px 0;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+.forced-question .rainbow-char { display: inline-block; }
+.forced-btn {
+  margin: 8px 10px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 900;
+}
+.forced-btn-a {
+  background: linear-gradient(90deg, #ff7a18, #ff2d95);
+  color: #fff;
+  box-shadow: 0 6px 12px rgba(255,45,149,0.18);
+}
+.forced-btn-b {
+  background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+  color: #fff;
+  box-shadow: 0 6px 12px rgba(58,123,213,0.18);
+}
+
+@keyframes dialog-pop {
+  0% { transform: scale(0.7) rotate(-6deg); opacity: 0; }
+  60% { transform: scale(1.04) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* 错误提示与震动动画 */
+.forced-dialog.forced-wrong {
+  animation: dialog-shake 420ms cubic-bezier(.2,.9,.3,1);
+}
+
+@keyframes dialog-shake {
+  0% { transform: translateX(0) scale(1); }
+  20% { transform: translateX(-10px) rotate(-3deg) scale(1.02); }
+  40% { transform: translateX(10px) rotate(3deg) scale(1.02); }
+  60% { transform: translateX(-6px) rotate(-2deg) scale(1.01); }
+  80% { transform: translateX(6px) rotate(2deg); }
+  100% { transform: translateX(0) rotate(0) scale(1); }
+}
+
+.forced-hint {
+  margin-top: 10px;
+  font-weight: 700;
+  color: #ffefef;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 260ms ease;
+}
+.forced-hint.visible {
+  opacity: 1;
+  transform: translateY(0);
 }

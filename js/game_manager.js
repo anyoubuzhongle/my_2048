@@ -5,6 +5,8 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.actuator       = new Actuator;
 
   this.startTiles     = 2;
+  this.lastMergedValue = null;
+  this.mergeStreak = 0;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
@@ -35,6 +37,10 @@ GameManager.prototype.isGameTerminated = function () {
 GameManager.prototype.setup = function () {
   var previousState = this.storageManager.getGameState();
 
+  // 重置合并追踪（不随存档恢复）
+  this.lastMergedValue = null;
+  this.mergeStreak = 0;
+
   // Reload the game from a previous game if present
   if (previousState) {
     this.grid        = new Grid(previousState.grid.size,
@@ -56,6 +62,36 @@ GameManager.prototype.setup = function () {
 
   // Update the actuator
   this.actuate();
+};
+
+// 处理合并时显示的嘲讽/玩笑消息
+GameManager.prototype.handleMergeMessage = function (value) {
+  // 更新连续合并计数
+  if (this.lastMergedValue === value) {
+    this.mergeStreak++;
+  } else {
+    this.lastMergedValue = value;
+    this.mergeStreak = 1;
+  }
+
+  var msg = null;
+
+  if (value === 4) {
+    // 首次或偶发的 2+2=4
+    if (this.mergeStreak >= 3) {
+      msg = "喷火鱼，你真逊";
+    } else {
+      msg = "哇敲，喷火鱼这么强";
+    }
+  } else if (value === 8) {
+    msg = "哇去，介么强。";
+  } else if (value === 32) {
+    msg = "666，还有高手";
+  } else if (value === 2048) {
+    msg = "你是传奇！";
+  }
+
+  if (msg) this.actuator.showMergeMessage(msg);
 };
 
 // Set up the initial tiles to start the game with
@@ -166,13 +202,8 @@ GameManager.prototype.move = function (direction) {
           // Update the score
           self.score += merged.value;
 
-          // 显示特定合并的浮现提示
-          if (merged.value === 4) {
-            self.actuator.showMergeMessage("喷火鱼真棒");
-          }
-          if (merged.value === 8) {
-            self.actuator.showMergeMessage("哇去，介么强。");
-          }
+                  // 处理合并时显示的嘲讽/玩笑消息
+                  self.handleMergeMessage(merged.value);
 
           // The mighty 2048 tile
           if (merged.value === 2048) self.won = true;
