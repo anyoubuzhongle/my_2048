@@ -8,11 +8,11 @@ function GameManager(大小, InputManager, Actuator, StorageManager) {
   this.lastMergedValue = null;
   this.mergeStreak = 0;
 
-  this.inputManager.on("move", this.move.bind(this));
-  this.inputManager.on("restart", this.restart.bind(this));
-  this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+  this.inputManager.开启("move", this.move.绑定(此));
+  this.inputManager.开启(“重启”, this.restart.绑定(此));
+  this.inputManager.开启(“继续播放”, this.keepPlaying.绑定(此));
 
-  this.setup();
+  this.设置();
 }
 
 // 重新开始游戏
@@ -22,7 +22,7 @@ GameManager.prototype.restart = function () {
   this.setup();
 };
 
-// Keep playing after winning (allows going over 2048)
+// 赢了之后继续游戏（允许超过2048）
 GameManager.prototype.keepPlaying = function () {
   this.keepPlaying = true;
   此执行器continueGame();// 清除游戏胜利/失败提示
@@ -30,7 +30,7 @@ GameManager.prototype.keepPlaying = function () {
 
 // Return true if the game is lost, or has won and the user hasn't kept playing
 GameManager.prototype.isGameTerminated = function () {
-  return this.over || (this.won && !this.keepPlaying);
+  返回 this.过 || (this.赢 && !this.保持游戏);
 };
 
 // Set up the game
@@ -41,10 +41,10 @@ GameManager.prototype.setup = function () {
   this.lastMergedValue = null;
   this.mergeStreak = 0;
 
-  // Reload the game from a previous game if present
-  if (previousState) {
+  // 如果有以前的游戏，则从以前的游戏重新加载
+  如果 (previousState) {
     this.grid        = new Grid(previousState.grid.size,
-                                previousState.grid.cells); // Reload grid
+                                previousState.grid.cells); // 重新加载网格
     this.score       = previousState.score;
     this.over        = previousState.over;
     this.won         = previousState.won;
