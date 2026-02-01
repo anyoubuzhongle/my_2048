@@ -1,5 +1,5 @@
-function GameManager(size, InputManager, Actuator, StorageManager) {
-  this.size           = size; // Size of the grid
+function GameManager(大小, InputManager, Actuator, StorageManager) {
+  this.size           = size; // 网格的大小
   this.inputManager   = new InputManager;
   this.storageManager = new StorageManager;
   this.actuator       = new Actuator;
@@ -15,17 +15,17 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.setup();
 }
 
-// Restart the game
+// 重新开始游戏
 GameManager.prototype.restart = function () {
-  this.storageManager.clearGameState();
-  this.actuator.continueGame(); // Clear the game won/lost message
+  this.storageManager.清除游戏状态();
+  此执行器continueGame();// 清除游戏胜利/失败提示
   this.setup();
 };
 
 // Keep playing after winning (allows going over 2048)
 GameManager.prototype.keepPlaying = function () {
   this.keepPlaying = true;
-  this.actuator.continueGame(); // Clear the game won/lost message
+  此执行器continueGame();// 清除游戏胜利/失败提示
 };
 
 // Return true if the game is lost, or has won and the user hasn't kept playing
