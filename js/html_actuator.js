@@ -6,6 +6,9 @@ function HTMLActuator() {
 
   this.score = 0;
   this.clickCount = 0;
+  this.hasDialog = false; // 是否有弹窗显示
+  this.wrongAnswerCount = 0; // 错误答案计数
+  this.redOverlay = null; // 红色遮罩层
 
   var self = this;
   // 统计用户手动点击次数，超过阈值弹出强制问题对话框
@@ -173,65 +176,80 @@ HTMLActuator.prototype.showMergeMessage = function (msg) {
   }, 1600);
 };
 
-// 显示强制选择对话：喷火鱼弱不弱？A: 是的（关闭） B: 不是（继续弹出）
+// 显示强制选择对话：喷火鱼是不是小狗？
 HTMLActuator.prototype.showForcedQuestion = function () {
   // 如果已有弹窗则返回
-  if (document.querySelector('.forced-modal')) return;
-
+  if (this.hasDialog) return;
+  
+  this.hasDialog = true;
+  var self = this;
+  
   var container = document.querySelector('.container') || document.body;
+  
+  // 创建红色遮罩层（如果不存在）
+  if (!this.redOverlay) {
+    this.redOverlay = document.createElement('div');
+    this.redOverlay.className = 'red-overlay';
+    container.appendChild(this.redOverlay);
+  }
+  
+  // 更新红色遮罩的透明度
+  this.updateRedOverlay();
+  
   var overlay = document.createElement('div');
   overlay.className = 'forced-modal';
-
+  
   var dialog = document.createElement('div');
   dialog.className = 'forced-dialog';
-
+  
   var q = document.createElement('p');
   q.className = 'forced-question';
-  // 将问题每字渲染为彩色渐变
-  var questionText = '喷火鱼弱不弱？';
-  for (var i = 0; i < questionText.length; i++) {
-    var ch = questionText.charAt(i);
-    var span = document.createElement('span');
-    span.className = 'rainbow-char';
-    var hue = (i * 48) % 360;
-    var hue2 = (hue + 90) % 360;
-    span.style.background = 'linear-gradient(90deg, hsl(' + hue + ',100%,60%), hsl(' + hue2 + ',100%,60%))';
-    span.style.webkitBackgroundClip = 'text';
-    span.style.backgroundClip = 'text';
-    span.style.webkitTextFillColor = 'transparent';
-    span.style.display = 'inline-block';
-    span.style.animationDelay = (i * 45) + 'ms';
-    span.textContent = ch;
-    q.appendChild(span);
-  }
-
-  var btnA = document.createElement('button');
-  btnA.className = 'forced-btn forced-btn-a';
-  btnA.textContent = 'A：是的';
-
-  var btnB = document.createElement('button');
-  btnB.className = 'forced-btn forced-btn-b';
-  btnB.textContent = 'B：不是';
-
+  q.textContent = '喷火鱼是不是小狗？';
+  
+  // 正确答案选项
+  var btnCorrect1 = document.createElement('button');
+  btnCorrect1.className = 'forced-btn forced-btn-correct';
+  btnCorrect1.textContent = '是，是小奶狗';
+  
+  var btnCorrect2 = document.createElement('button');
+  btnCorrect2.className = 'forced-btn forced-btn-correct';
+  btnCorrect2.textContent = '是，是小土狗';
+  
+  // 错误答案选项
+  var btnWrong = document.createElement('button');
+  btnWrong.className = 'forced-btn forced-btn-wrong';
+  btnWrong.textContent = '不是，喷火鱼是高冷男神';
+  
   dialog.appendChild(q);
-  dialog.appendChild(btnA);
-  dialog.appendChild(btnB);
+  dialog.appendChild(btnCorrect1);
+  dialog.appendChild(btnCorrect2);
+  dialog.appendChild(btnWrong);
   overlay.appendChild(dialog);
   container.appendChild(overlay);
-
-  // A: 关闭弹窗，继续游戏
-  btnA.addEventListener('click', function (ev) {
-    ev.stopPropagation();
-    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
-  });
-  // B: 错误选项不允许关闭弹窗：震动并闪烁提示错误，直到选择 A
-  btnB.addEventListener('click', function (ev) {
-    ev.stopPropagation();
-    // 添加错误样式触发动画
+  
+  // 正确答案：关闭弹窗，重置错误计数
+  var correctHandler = function() {
+    if (overlay && overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
+    }
+    self.hasDialog = false;
+    self.wrongAnswerCount = 0;
+    self.updateRedOverlay();
+  };
+  
+  btnCorrect1.addEventListener('click', correctHandler);
+  btnCorrect2.addEventListener('click', correctHandler);
+  
+  // 错误答案：增加错误计数，关闭后重新弹出
+  btnWrong.addEventListener('click', function() {
+    self.wrongAnswerCount++;
+    
+    // 添加错误动画
     dialog.classList.remove('forced-wrong');
-    void dialog.offsetWidth; // 强制重绘以复位动画
+    void dialog.offsetWidth; // 强制重绘
     dialog.classList.add('forced-wrong');
-    // 短暂显示提示文字
+    
+    // 短暂显示错误提示
     var hint = dialog.querySelector('.forced-hint');
     if (!hint) {
       hint = document.createElement('div');
@@ -242,19 +260,79 @@ HTMLActuator.prototype.showForcedQuestion = function () {
     hint.classList.remove('visible');
     void hint.offsetWidth;
     hint.classList.add('visible');
+    
+    // 更新红色遮罩
+    self.updateRedOverlay();
+    
+    // 延迟后关闭当前弹窗并重新弹出
+    setTimeout(function() {
+      if (overlay && overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+      self.hasDialog = false;
+      
+      // 重新弹出弹窗
+      setTimeout(function() {
+        self.showForcedQuestion();
+      }, 500);
+    }, 1500);
   });
+};
+
+// 更新红色遮罩
+HTMLActuator.prototype.updateRedOverlay = function () {
+  if (!this.redOverlay) return;
+  
+  // 错误次数越多，红色越深，透明度越高
+  var maxOpacity = 0.7; // 最大透明度70%
+  var opacity = Math.min(maxOpacity, this.wrongAnswerCount * 0.15);
+  
+  // 添加一些抖动效果
+  if (this.wrongAnswerCount > 0) {
+    this.redOverlay.style.opacity = opacity;
+    this.redOverlay.style.backgroundColor = `rgba(255, 0, 0, ${opacity})`;
+    
+    // 添加脉动效果
+    if (此.wrongAnswerCount >= 3) {
+      this.redOverlay.classList.add('pulsing');
+    } else {
+      this.redOverlay.classList.remove('pulsing');
+    }
+    
+    // 添加闪烁效果（错误次数多时）
+    if (this.wrongAnswerCount >= 5) {
+      this.redOverlay.classList.add('blinking');
+    } else {
+      this.redOverlay.classList.remove('blinking');
+    }
+    
+    // 修改整个页面的色调（错误次数越多越红）
+    document.body.classList.remove('red-alert', 'red-alert-extreme');
+    if (this.wrongAnswerCount >= 3) {
+      document.body.classList.add('red-alert');
+    }
+    如果 (this.wrongAnswerCount >= 6) {
+      document.body.classList.remove('red-alert');
+      document.body.classList.add('red-alert-extreme');
+    }
+  } else {
+    // 没有错误时隐藏遮罩
+    this.redOverlay.style.opacity = '0';
+    this.redOverlay.classList.remove('pulsing', 'blinking');
+    document.body.classList.remove('red-alert', 'red-alert-extreme');
+  }
 };
 
 HTMLActuator.prototype.message = function (won) {
   var type    = won ? "game-won" : "game-over";
-  var message = won ? "You win!" : "Game over!";
+  var message = won ? "你赢了！" : "游戏结束！";
 
   this.messageContainer.classList.add(type);
-  this.messageContainer.getElementsByTagName("p")[0].textContent = message;
+  此消息容器获取ElementsByTagName("p")[0]textContent=消息;
 };
 
 HTMLActuator.prototype.clearMessage = function () {
-  // IE only takes one value to remove at a time.
+  // IE 只能一次移除一个值。
   this.messageContainer.classList.remove("game-won");
   this.messageContainer.classList.remove("game-over");
 };
